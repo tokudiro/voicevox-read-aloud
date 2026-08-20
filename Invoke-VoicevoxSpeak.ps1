@@ -58,7 +58,11 @@ begin {
     }
 
     if ($ListSpeakers) {
-        $speakers = Invoke-RestMethod -Uri "$EngineUrl/speakers" -Method Get
+        # Invoke-RestMethodはレスポンスのContent-TypeにcharsetがないとUTF-8として
+        # 正しく解釈できず文字化けするため、RawContentStreamから生バイトを取得して
+        # 明示的にUTF-8でデコードする。
+        $resp = Invoke-WebRequest -Uri "$EngineUrl/speakers" -Method Get
+        $speakers = [System.Text.Encoding]::UTF8.GetString($resp.RawContentStream.ToArray()) | ConvertFrom-Json
         foreach ($sp in $speakers) {
             foreach ($style in $sp.styles) {
                 Write-Host ("{0,4}  {1} - {2}" -f $style.id, $sp.name, $style.name)
@@ -71,7 +75,9 @@ begin {
         param([string]$Text, [int]$Speaker, [string]$EngineUrl)
 
         $encoded = [System.Uri]::EscapeDataString($Text)
-        $query = Invoke-RestMethod -Method Post -Uri "$EngineUrl/audio_query?text=$encoded&speaker=$Speaker"
+        # /speakersと同じ理由でRawContentStreamから明示的にUTF-8デコードする
+        $queryResp = Invoke-WebRequest -Method Post -Uri "$EngineUrl/audio_query?text=$encoded&speaker=$Speaker"
+        $query = [System.Text.Encoding]::UTF8.GetString($queryResp.RawContentStream.ToArray()) | ConvertFrom-Json
         $bodyJson = $query | ConvertTo-Json -Depth 20
 
         $tempWav = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName() + ".wav")
@@ -87,7 +93,8 @@ begin {
         [void]$ps.AddScript({
             param($Text, $Speaker, $EngineUrl)
             $encoded = [System.Uri]::EscapeDataString($Text)
-            $query = Invoke-RestMethod -Method Post -Uri "$EngineUrl/audio_query?text=$encoded&speaker=$Speaker"
+            $queryResp = Invoke-WebRequest -Method Post -Uri "$EngineUrl/audio_query?text=$encoded&speaker=$Speaker"
+            $query = [System.Text.Encoding]::UTF8.GetString($queryResp.RawContentStream.ToArray()) | ConvertFrom-Json
             $bodyJson = $query | ConvertTo-Json -Depth 20
             $tempWav = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName() + ".wav")
             Invoke-WebRequest -Method Post -Uri "$EngineUrl/synthesis?speaker=$Speaker" -Body $bodyJson -ContentType "application/json" -OutFile $tempWav
