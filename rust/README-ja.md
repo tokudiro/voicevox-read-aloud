@@ -43,6 +43,9 @@ read-aloud path/to/draft.md -l 10
 read-aloud path/to/draft.md -l 10:
 read-aloud path/to/draft.md -l :30
 
+# 長いチャンクをさらに分割（テスト再生で短く止めたい場合に）
+read-aloud path/to/draft.md --chunk-length 40
+
 # Markdown記法を解釈せず、テキストをそのまま読み上げ
 read-aloud path/to/draft.md -p
 
@@ -74,6 +77,7 @@ cat path/to/draft.md | read-aloud
 | — | `[FILE]` | 読み上げるファイル（省略時は標準入力から読み込み） |
 | `-s` | `--speaker` | 話者ID（既定: 3 = ずんだもん ノーマル） |
 | `-l <n[:m]>` | `--lines` | 行番号指定（`-l 10` は10行目のみ、`-l 10:30` は10〜30行目、`-l 10:` は10行目以降、`-l :30` は30行目まで） |
+| — | `--chunk-length <n>`（エイリアス`--cl`） | n文字を超えるチャンクをさらに分割（読点「、」→ 空白 → n文字で強制カットの順）。既定: 未指定時は追加分割しない |
 | `-p` | `--plain-text` | Markdown記法を解釈せず、テキストをそのまま扱う |
 | — | `--list-speakers`（エイリアス`--ls`） | 話者一覧を表示して終了。`-i`併用でその話者だけに絞り込み |
 | — | `--license`（エイリアス`--lc`） | 話者ごとの利用規約を表示して終了。`-i`併用でその話者だけに絞り込み |
@@ -86,7 +90,7 @@ cat path/to/draft.md | read-aloud
 | `-u` | `--engine-url` | VOICEVOXエンジンのURL（既定: `http://localhost:50021`） |
 | `-h` | `--help` | ヘルプを表示 |
 
-PowerShell版の`-is`/`-ps`/`-ss`/`-vs`/`-ls`/`-lc`と異なり、これらのエイリアスは`--is`のようにダブルダッシュが必要です（`clap`のshortオプションは1文字までのため）。
+PowerShell版の`-is`/`-ps`/`-ss`/`-vs`/`-ls`/`-lc`と異なり、これらのエイリアスは`--is`のようにダブルダッシュが必要です（`clap`のshortオプションは1文字までのため）。`--chunk-length`に負の値を渡す場合、`--chunk-length -5`だと`clap`が`-5`を別オプションと誤認識するため、`--chunk-length=-5`のように`=`で繋げてください。
 
 ## ライセンス
 

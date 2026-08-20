@@ -27,6 +27,10 @@ struct Args {
     #[arg(short = 'l', long = "lines")]
     lines: Option<String>,
 
+    /// n文字を超えるチャンクをさらに分割（読点→空白→強制カットの順）。未指定時は追加分割しない
+    #[arg(long = "chunk-length", alias = "cl")]
+    chunk_length: Option<i64>,
+
     /// Markdown記法を解釈せず、テキストをそのまま扱う
     #[arg(short = 'p', long = "plain-text")]
     plain_text: bool,
@@ -72,6 +76,15 @@ fn main() -> ExitCode {
         pitch: args.pitch_scale,
         speed: args.speed_scale,
         volume: args.volume_scale,
+    };
+
+    let chunk_length = match args.chunk_length {
+        Some(n) if n <= 0 => {
+            eprintln!("「--chunk-length」には1以上の整数を指定してください: {}", n);
+            return ExitCode::FAILURE;
+        }
+        Some(n) => Some(n as usize),
+        None => None,
     };
 
     let client = VoicevoxClient::new(args.engine_url.clone());
@@ -139,6 +152,19 @@ fn main() -> ExitCode {
         markdown::strip_markdown(&raw_text)
     };
     let chunks = markdown::split_into_chunks(&plain_text);
+    let chunks: Vec<String> = match chunk_length {
+        Some(n) => chunks
+            .into_iter()
+            .flat_map(|c| {
+                if c.chars().count() > n {
+                    markdown::split_long_chunk(&c, n)
+                } else {
+                    vec![c]
+                }
+            })
+            .collect(),
+        None => chunks,
+    };
 
     if chunks.is_empty() {
         eprintln!("読み上げるテキストがありません。");

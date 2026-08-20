@@ -97,6 +97,47 @@ pub fn parse_line_range(s: &str) -> Result<(usize, usize), String> {
     }
 }
 
+/// 句点分割"後"のチャンクのうちmax_lengthを超えるものだけを対象に、上限に近い位置から
+/// 手前方向へ 読点（、）→ 半角/全角スペース → 強制カット の順で分割点を探す。
+/// PowerShell版のSplit-LongChunkと同じロジック。chars()ベースで扱うため、
+/// PowerShell版と違いサロゲートペアの境界を気にする必要はない（Rustのcharは常に1スカラー値）。
+pub fn split_long_chunk(text: &str, max_length: usize) -> Vec<String> {
+    let chars: Vec<char> = text.chars().collect();
+    let mut pieces = Vec::new();
+    let mut start = 0;
+
+    while chars.len() - start > max_length {
+        let window_end = start + max_length;
+        let window = &chars[start..window_end];
+
+        if let Some(comma_idx) = window.iter().rposition(|&c| c == '、') {
+            let cut = start + comma_idx + 1;
+            pieces.push(chars[start..cut].iter().collect());
+            start = cut;
+            continue;
+        }
+
+        if let Some(space_idx) = window.iter().rposition(|&c| c == ' ' || c == '\u{3000}') {
+            let piece: String = chars[start..start + space_idx].iter().collect();
+            let piece = piece.trim_end().to_string();
+            if !piece.is_empty() {
+                pieces.push(piece);
+            }
+            start += space_idx + 1;
+            continue;
+        }
+
+        pieces.push(chars[start..window_end].iter().collect());
+        start = window_end;
+    }
+
+    if start < chars.len() {
+        pieces.push(chars[start..].iter().collect());
+    }
+
+    pieces
+}
+
 /// 指定行範囲（1始まり・両端含む。endが0なら末尾まで）だけを取り出す。
 /// `raw`はエラーメッセージ表示用の元の`-l`引数文字列。
 pub fn apply_line_range(text: &str, start: usize, end: usize, raw: &str) -> Result<String, String> {
