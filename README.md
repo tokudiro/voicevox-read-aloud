@@ -22,6 +22,9 @@ read-aloud.bat path\to\draft.md
 read-aloud.bat path\to\draft.md -s 8
 read-aloud.bat -ls
 
+:: Check each speaker's license/usage terms
+read-aloud.bat -lc
+
 :: Read only a line range (1-based, inclusive)
 read-aloud.bat path\to\draft.md -l 10:30
 read-aloud.bat path\to\draft.md -l 10
@@ -54,6 +57,7 @@ Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read-aloud.ps1
 | `-l <n[:m]>` | `-Lines` | Line range (`-l 10` = line 10 only, `-l 10:30` = lines 10-30) |
 | `-p` | `-PlainText` | Treat input as plain text, skipping Markdown parsing |
 | `-ls` | `-ListSpeakers` | List installed speakers and exit |
+| `-lc` | `-License` | Show each installed speaker's usage terms/license and exit |
 | `-o <path>` | `-Output` | Don't play back — write audio to a file instead (requires ffmpeg) |
 | `-is <value>` | `-IntonationScale` | Intonation (`intonationScale`). Default: engine default (unset unless passed). Typical range 0.0-2.0 |
 | `-ps <value>` | `-PitchScale` | Pitch (`pitchScale`). Default: engine default (unset unless passed). Typical range -0.15-0.15 |

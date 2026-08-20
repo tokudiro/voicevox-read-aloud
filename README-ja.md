@@ -24,6 +24,9 @@ read-aloud.bat path\to\draft.md
 read-aloud.bat path\to\draft.md -s 8
 read-aloud.bat -ls
 
+:: 話者ごとの利用規約を確認する
+read-aloud.bat -lc
+
 :: 行番号を指定して一部だけ読ませる（1始まり・両端含む）
 read-aloud.bat path\to\draft.md -l 10:30
 read-aloud.bat path\to\draft.md -l 10
@@ -56,6 +59,7 @@ Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read-aloud.ps1
 | `-l <n[:m]>` | `-Lines` | 行番号指定（`-l 10` は10行目のみ、`-l 10:30` は10〜30行目） |
 | `-p` | `-PlainText` | Markdown記法を解釈せず、テキストをそのまま扱う |
 | `-ls` | `-ListSpeakers` | 話者一覧を表示して終了 |
+| `-lc` | `-License` | 話者ごとの利用規約を表示して終了 |
 | `-o <path>` | `-Output` | 再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg） |
 | `-is <値>` | `-IntonationScale` | 抑揚（`intonationScale`）。既定: エンジン既定値のまま（未指定時は変更しない）。目安0.0〜2.0 |
 | `-ps <値>` | `-PitchScale` | 音高（`pitchScale`）。既定: エンジン既定値のまま（未指定時は変更しない）。目安-0.15〜0.15 |

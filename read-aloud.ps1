@@ -15,6 +15,9 @@
     [Alias("ls")]
     [switch]$ListSpeakers,
 
+    [Alias("lc")]
+    [switch]$License,
+
     [Alias("h")]
     [switch]$Help,
 
@@ -65,7 +68,8 @@ begin {
         Write-Host "  -s,  -Speaker <ID>     話者ID（既定: 3 = ずんだもん ノーマル）"
         Write-Host "  -l,  -Lines <n[:m]>    行番号を指定（-l 10 は10行目のみ、-l 10:20 は10〜20行目）"
         Write-Host "  -u,  -EngineUrl <url>  VOICEVOXエンジンのURL（既定: http://localhost:50021）"
-        Write-Host "  -ls, -ListSpeakers     インストール済みの話者一覧を表示して終了"
+        Write-Host "  -ls, -ListSpeakers          インストール済みの話者一覧を表示して終了"
+        Write-Host "  -lc, -License               インストール済みの話者ごとの利用規約を表示して終了"
         Write-Host "  -p,  -PlainText             Markdown記法を解釈せず、テキストをそのまま読み上げ"
         Write-Host "  -o,  -Output <path>         再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg）"
         Write-Host "  -is, -IntonationScale <値>  抑揚（既定: エンジン既定値のまま変更しない。目安0.0〜2.0）"
@@ -85,17 +89,22 @@ begin {
         exit $LASTEXITCODE
     }
 
+    if ($License) {
+        & "$PSScriptRoot\Invoke-VoicevoxSpeak.ps1" -License -EngineUrl $EngineUrl
+        exit $LASTEXITCODE
+    }
+
     $pipedLines = New-Object System.Collections.Generic.List[string]
 }
 
 process {
-    if (-not $helpRequested -and -not $ListSpeakers -and $PSBoundParameters.ContainsKey('PipelineLine')) {
+    if (-not $helpRequested -and -not $ListSpeakers -and -not $License -and $PSBoundParameters.ContainsKey('PipelineLine')) {
         $pipedLines.Add($PipelineLine)
     }
 }
 
 end {
-    if ($helpRequested -or $ListSpeakers) { return }
+    if ($helpRequested -or $ListSpeakers -or $License) { return }
 
     $chunksScript = "$PSScriptRoot\ConvertTo-SpeechChunks.ps1"
     $speakScript = "$PSScriptRoot\Invoke-VoicevoxSpeak.ps1"

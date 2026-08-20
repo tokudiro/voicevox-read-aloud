@@ -8,6 +8,9 @@
     [Alias("ls")]
     [switch]$ListSpeakers,
 
+    [Alias("lc")]
+    [switch]$License,
+
     [Alias("o")]
     [string]$Output,
 
@@ -49,6 +52,7 @@ begin {
         Write-Host "  -s,  -Speaker <ID>          話者ID（既定: 3 = ずんだもん ノーマル）"
         Write-Host "  -u,  -EngineUrl <url>       VOICEVOXエンジンのURL（既定: http://localhost:50021）"
         Write-Host "  -ls, -ListSpeakers          インストール済みの話者一覧を表示して終了"
+        Write-Host "  -lc, -License               インストール済みの話者ごとの利用規約を表示して終了"
         Write-Host "  -o,  -Output <path>         再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg）"
         Write-Host "  -is, -IntonationScale <値>  抑揚（既定: エンジン既定値のまま変更しない。目安0.0〜2.0）"
         Write-Host "  -ps, -PitchScale <値>       音高（既定: エンジン既定値のまま変更しない。目安-0.15〜0.15）"
@@ -92,6 +96,21 @@ begin {
             foreach ($style in $sp.styles) {
                 Write-Host ("{0,4}  {1} - {2}" -f $style.id, $sp.name, $style.name)
             }
+        }
+        exit 0
+    }
+
+    if ($License) {
+        # /speakersは1キャラクター1エントリなので、-ListSpeakersと違いスタイル単位の
+        # ループは不要（スタイル違いは同じ話者の利用規約を共有する）。
+        $resp = Invoke-WebRequest -Uri "$EngineUrl/speakers" -Method Get
+        $speakers = [System.Text.Encoding]::UTF8.GetString($resp.RawContentStream.ToArray()) | ConvertFrom-Json
+        foreach ($sp in $speakers) {
+            $infoResp = Invoke-WebRequest -Uri "$EngineUrl/speaker_info?speaker_uuid=$($sp.speaker_uuid)" -Method Get
+            $info = [System.Text.Encoding]::UTF8.GetString($infoResp.RawContentStream.ToArray()) | ConvertFrom-Json
+            Write-Host "=== $($sp.name) ==="
+            Write-Host $info.policy
+            Write-Host ""
         }
         exit 0
     }
