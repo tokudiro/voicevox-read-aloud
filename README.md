@@ -6,6 +6,8 @@ Hearing your own writing read back to you is a fast way to catch awkward phrasin
 
 日本語版READMEは [README-ja.md](README-ja.md) にあります。
 
+This is the original, feature-complete **PowerShell** implementation (Windows-only). A newer, cross-platform **Rust** port with a smaller feature set is also in this repo — see [rust/README.md](rust/README.md).
+
 ## Prerequisites
 
 - Windows PowerShell 5.1+ or PowerShell 7+

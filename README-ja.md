@@ -8,6 +8,8 @@
 
 English README is available at [README.md](README.md).
 
+これは元々の、機能が一番揃っている**PowerShell版**（Windows専用）です。同じリポジトリ内に、機能はまだ少ないもののクロスプラットフォームな**Rust版**もあります。詳細は[rust/README-ja.md](rust/README-ja.md)を参照してください。
+
 ## 事前準備
 
 - Windows PowerShell 5.1以降、またはPowerShell 7以降
