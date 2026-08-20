@@ -1,4 +1,4 @@
-param (
+﻿param (
     [Parameter(Position=0, Mandatory=$false)]
     [Alias("f")]
     [string]$File,
