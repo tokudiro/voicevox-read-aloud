@@ -36,6 +36,8 @@ read-aloud.bat -lc 3
 :: 行番号を指定して一部だけ読ませる（1始まり・両端含む）
 read-aloud.bat path\to\draft.md -l 10:30
 read-aloud.bat path\to\draft.md -l 10
+read-aloud.bat path\to\draft.md -l 10:
+read-aloud.bat path\to\draft.md -l :30
 
 :: Markdown記法を解釈せず、テキストをそのまま読み上げ
 read-aloud.bat path\to\draft.md -p
@@ -62,7 +64,7 @@ Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read-aloud.ps1
 | 短縮形 | 完全形 | 内容 |
 |---|---|---|
 | `-s <ID>` | `-Speaker` | 話者ID（既定: 3 = ずんだもん ノーマル） |
-| `-l <n[:m]>` | `-Lines` | 行番号指定（`-l 10` は10行目のみ、`-l 10:30` は10〜30行目） |
+| `-l <n[:m]>` | `-Lines` | 行番号指定（`-l 10` は10行目のみ、`-l 10:30` は10〜30行目、`-l 10:` は10行目以降、`-l :30` は30行目まで） |
 | `-p` | `-PlainText` | Markdown記法を解釈せず、テキストをそのまま扱う |
 | `-ls [ID]` | `-ListSpeakers` | 話者一覧を表示して終了。`ID`指定でその話者だけに絞り込み |
 | `-lc [ID]` | `-License` | 話者ごとの利用規約を表示して終了。`ID`指定でその話者だけに絞り込み |

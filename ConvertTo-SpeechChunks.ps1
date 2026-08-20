@@ -37,7 +37,7 @@ begin {
         Write-Host "1チャンク1オブジェクトとしてパイプラインへ出力します。"
         Write-Host ""
         Write-Host "オプション:"
-        Write-Host "  -l,  -Lines <n[:m]>    行番号を指定（-l 10 は10行目のみ、-l 10:20 は10〜20行目）"
+        Write-Host "  -l,  -Lines <n[:m]>    行番号を指定（-l 10 は10行目のみ、-l 10:20 は10〜20行目、-l 10: は10行目以降、-l :20 は20行目まで）"
         Write-Host "  -p,  -PlainText        Markdown記法を解釈せず、テキストをそのまま扱う"
         Write-Host "  -h,  --help            このヘルプを表示"
         exit 0

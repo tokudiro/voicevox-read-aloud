@@ -66,7 +66,7 @@ begin {
         Write-Host ""
         Write-Host "オプション:"
         Write-Host "  -s,  -Speaker <ID>     話者ID（既定: 3 = ずんだもん ノーマル）"
-        Write-Host "  -l,  -Lines <n[:m]>    行番号を指定（-l 10 は10行目のみ、-l 10:20 は10〜20行目）"
+        Write-Host "  -l,  -Lines <n[:m]>    行番号を指定（-l 10 は10行目のみ、-l 10:20 は10〜20行目、-l 10: は10行目以降、-l :20 は20行目まで）"
         Write-Host "  -u,  -EngineUrl <url>  VOICEVOXエンジンのURL（既定: http://localhost:50021）"
         Write-Host "  -ls, -ListSpeakers [ID]     インストール済みの話者一覧を表示して終了（ID指定でその話者だけに絞り込み）"
         Write-Host "  -lc, -License [ID]          インストール済みの話者ごとの利用規約を表示して終了（ID指定でその話者だけに絞り込み）"

@@ -34,6 +34,8 @@ read-aloud.bat -lc 3
 :: Read only a line range (1-based, inclusive)
 read-aloud.bat path\to\draft.md -l 10:30
 read-aloud.bat path\to\draft.md -l 10
+read-aloud.bat path\to\draft.md -l 10:
+read-aloud.bat path\to\draft.md -l :30
 
 :: Treat the file as plain text, skipping Markdown parsing
 read-aloud.bat path\to\draft.md -p
@@ -60,7 +62,7 @@ Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read-aloud.ps1
 | Short | Long | Description |
 |---|---|---|
 | `-s <ID>` | `-Speaker` | Speaker ID (default: 3 = Zundamon, Normal) |
-| `-l <n[:m]>` | `-Lines` | Line range (`-l 10` = line 10 only, `-l 10:30` = lines 10-30) |
+| `-l <n[:m]>` | `-Lines` | Line range (`-l 10` = line 10 only, `-l 10:30` = lines 10-30, `-l 10:` = line 10 to end, `-l :30` = start to line 30) |
 | `-p` | `-PlainText` | Treat input as plain text, skipping Markdown parsing |
 | `-ls [ID]` | `-ListSpeakers` | List installed speakers and exit. With `ID`, show only that one |
 | `-lc [ID]` | `-License` | Show each installed speaker's usage terms/license and exit. With `ID`, show only that speaker's |
