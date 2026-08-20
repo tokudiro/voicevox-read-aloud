@@ -31,7 +31,7 @@ param (
     [string[]]$Rest
 )
 
-# read_aloud.ps1 は、テキスト分割（ConvertTo-SpeechChunks.ps1）と音声合成・再生
+# read-aloud.ps1 は、テキスト分割（ConvertTo-SpeechChunks.ps1）と音声合成・再生
 # （Invoke-VoicevoxSpeak.ps1）をパイプでつなぐだけの薄いラッパー。
 # 分割した理由: 以前、分割前の1本のスクリプトで「音声合成に渡る直前のテキストが
 # 何か」を確認するためだけに本体を書き換えてデバッグ出力を仕込む必要があった。
@@ -44,10 +44,10 @@ begin {
     $helpRequested = $Help -or ($Rest -contains '--help') -or ($File -eq '--help')
     if ($helpRequested) {
         Write-Host "使い方:"
-        Write-Host "  read_aloud.ps1 <ファイル> [-s <話者ID>] [-l <行 または 開始:終了>]"
-        Write-Host "  read_aloud.ps1 -ls                  話者一覧を表示"
-        Write-Host "  read_aloud.ps1 --help                このヘルプを表示"
-        Write-Host "  Get-Content <ファイル> -Encoding UTF8 | .\read_aloud.ps1   標準入力から読み上げ"
+        Write-Host "  read-aloud.ps1 <ファイル> [-s <話者ID>] [-l <行 または 開始:終了>]"
+        Write-Host "  read-aloud.ps1 -ls                  話者一覧を表示"
+        Write-Host "  read-aloud.ps1 --help                このヘルプを表示"
+        Write-Host "  Get-Content <ファイル> -Encoding UTF8 | .\read-aloud.ps1   標準入力から読み上げ"
         Write-Host ""
         Write-Host "オプション:"
         Write-Host "  -s,  -Speaker <ID>     話者ID（既定: 3 = ずんだもん ノーマル）"
@@ -99,7 +99,7 @@ end {
     if ($Output) { $speakParams['Output'] = $Output }
 
     if ($pipedLines.Count -gt 0) {
-        # PowerShell内の実パイプライン経由（例: Get-Content file | read_aloud.ps1）。
+        # PowerShell内の実パイプライン経由（例: Get-Content file | read-aloud.ps1）。
         # 受け取った行をそのままConvertTo-SpeechChunks.ps1のパイプライン入力へ転送する。
         $pipedLines | & $chunksScript @chunkParams | & $speakScript @speakParams
     } else {

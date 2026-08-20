@@ -15,23 +15,23 @@ Hearing your own writing read back to you is a fast way to catch awkward phrasin
 ## Usage
 
 ```cmd
-:: Drag & drop a file onto read_aloud.bat, or run it from the command line
-read_aloud.bat path\to\draft.md
+:: Drag & drop a file onto read-aloud.bat, or run it from the command line
+read-aloud.bat path\to\draft.md
 
 :: Change speaker (list IDs with -ls)
-read_aloud.bat path\to\draft.md -s 8
-read_aloud.bat -ls
+read-aloud.bat path\to\draft.md -s 8
+read-aloud.bat -ls
 
 :: Read only a line range (1-based, inclusive)
-read_aloud.bat path\to\draft.md -l 10:30
-read_aloud.bat path\to\draft.md -l 10
+read-aloud.bat path\to\draft.md -l 10:30
+read-aloud.bat path\to\draft.md -l 10
 
 :: Prefetch the next chunk's synthesis while the current one plays
 :: (off by default; noticeably shorter waits when it matters)
-read_aloud.bat path\to\draft.md -p
+read-aloud.bat path\to\draft.md -p
 
 :: Full option list
-read_aloud.bat --help
+read-aloud.bat --help
 ```
 
 **From a pipeline (PowerShell only):**
@@ -39,8 +39,8 @@ read_aloud.bat --help
 ```powershell
 :: Use PowerShell's own in-process pipeline. Piping across processes via
 :: the .bat wrapper corrupts the encoding, so avoid that route.
-Get-Content draft.md -Encoding UTF8 | .\read_aloud.ps1
-Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read_aloud.ps1
+Get-Content draft.md -Encoding UTF8 | .\read-aloud.ps1
+Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read-aloud.ps1
 ```
 
 ## Options
@@ -62,7 +62,7 @@ Two scripts piped together:
 - `ConvertTo-SpeechChunks.ps1` — splits Markdown/plain text into sentence-level chunks (strips headings, emphasis, links, code blocks, front matter, etc.)
 - `Invoke-VoicevoxSpeak.ps1` — sends each chunk to the VOICEVOX engine and plays or exports it
 
-`read_aloud.ps1` is a thin wrapper connecting the two; each script can also be run standalone (e.g. to inspect the chunking output without starting VOICEVOX).
+`read-aloud.ps1` is a thin wrapper connecting the two; each script can also be run standalone (e.g. to inspect the chunking output without starting VOICEVOX).
 
 ## License
 

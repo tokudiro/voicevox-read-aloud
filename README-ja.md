@@ -1,5 +1,7 @@
 # voicevox-read-aloud
 
+> ずんだもんに読ませてみた。
+
 [VOICEVOX](https://voicevox.hiroshiba.jp/)（無料の日本語音声合成エンジン）を使って、Markdown（または平文）の原稿を読み上げるWindows PowerShell製CLIです。
 
 自分で書いた文章を耳で聞くと、文章のねじれ・冗長な表現・主述の不一致など、目で読むだけでは見落としがちな違和感に気づきやすくなります。本ツールはMarkdown記法を取り除いたうえで、テキストを文単位で読み上げます。
@@ -16,21 +18,21 @@ English README is available at [README.md](README.md).
 
 ```cmd
 :: エクスプローラーからのドラッグ&ドロップ、またはコマンドラインで
-read_aloud.bat path\to\draft.md
+read-aloud.bat path\to\draft.md
 
 :: 話者を変える場合（IDは -ls で一覧表示）
-read_aloud.bat path\to\draft.md -s 8
-read_aloud.bat -ls
+read-aloud.bat path\to\draft.md -s 8
+read-aloud.bat -ls
 
 :: 行番号を指定して一部だけ読ませる（1始まり・両端含む）
-read_aloud.bat path\to\draft.md -l 10:30
-read_aloud.bat path\to\draft.md -l 10
+read-aloud.bat path\to\draft.md -l 10:30
+read-aloud.bat path\to\draft.md -l 10
 
 :: 次のチャンクの音声合成を先読みして待ち時間を短縮（体感で気になったときだけ）
-read_aloud.bat path\to\draft.md -p
+read-aloud.bat path\to\draft.md -p
 
 :: オプション一覧
-read_aloud.bat --help
+read-aloud.bat --help
 ```
 
 **標準入力（パイプライン）から読ませる場合:**
@@ -38,8 +40,8 @@ read_aloud.bat --help
 ```powershell
 :: PowerShellの同一セッション内パイプラインを使うこと
 :: （.bat経由の別プロセスパイプは文字コードで化けるため非推奨）
-Get-Content draft.md -Encoding UTF8 | .\read_aloud.ps1
-Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read_aloud.ps1
+Get-Content draft.md -Encoding UTF8 | .\read-aloud.ps1
+Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read-aloud.ps1
 ```
 
 ## オプション早見表
@@ -61,7 +63,7 @@ Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read_aloud.ps1
 - `ConvertTo-SpeechChunks.ps1` — Markdown/平文テキストを読み上げ用の文単位チャンクに分割（見出し・強調・リンク・コードブロック・フロントマター等を除去）
 - `Invoke-VoicevoxSpeak.ps1` — 各チャンクをVOICEVOXエンジンへ送って音声合成・再生（または書き出し）
 
-`read_aloud.ps1` はこの2つをつなぐ薄いラッパーです。各スクリプトは単体でも実行できます（例: VOICEVOXを起動せずにチャンク分割結果だけを確認する）。
+`read-aloud.ps1` はこの2つをつなぐ薄いラッパーです。各スクリプトは単体でも実行できます（例: VOICEVOXを起動せずにチャンク分割結果だけを確認する）。
 
 ## ライセンス
 

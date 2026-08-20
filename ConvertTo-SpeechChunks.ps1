@@ -127,7 +127,7 @@ end {
         $rawText = ($pipedLines -join "`n")
     } elseif ([Console]::IsInputRedirected) {
         # 別プロセス経由のOSレベル標準入力。コンソールのコードページ次第で文字化けしうるフォールバック
-        # （cmd.exe等の外部パイプ経由。read_aloud.ps1からのネスト呼び出しもこの経路）
+        # （cmd.exe等の外部パイプ経由。read-aloud.ps1からのネスト呼び出しもこの経路）
         $rawText = [Console]::In.ReadToEnd()
     } else {
         Write-Error "使い方: ConvertTo-SpeechChunks.ps1 <ファイル> [-l <行 または 開始:終了>]（詳細は --help）"
