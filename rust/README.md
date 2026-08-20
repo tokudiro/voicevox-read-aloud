@@ -8,6 +8,10 @@ A cross-platform Rust port of the [PowerShell version](../README.md) of `voicevo
 
 All options from the PowerShell version are now ported: line ranges, plain-text mode, file export, speaker/license listing with ID filtering, and the four `*Scale` options. The CLI surface differs slightly from the PowerShell version because `clap` short flags are limited to a single character — see the options table below for the exact names.
 
+## Prebuilt binaries
+
+[GitHub Actions](https://github.com/tokudiro/voicevox-read-aloud/actions/workflows/release.yml) builds binaries for Windows (x64), macOS (x64/arm64), and Linux (x64/arm64) on every tagged release — see the [Releases page](https://github.com/tokudiro/voicevox-read-aloud/releases). Only the Windows x64 build is manually verified by the maintainer; the others are built by CI but not hand-tested on real hardware. If one doesn't work, please [open an issue](https://github.com/tokudiro/voicevox-read-aloud/issues).
+
 ## Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install) (stable toolchain)

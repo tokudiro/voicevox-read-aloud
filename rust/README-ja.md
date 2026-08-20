@@ -8,6 +8,10 @@ English README is available at [README.md](README.md).
 
 PowerShell版のオプションは全て移植済みです（行範囲指定、プレーンテキストモード、ファイル書き出し、話者一覧・利用規約のID絞り込み、`*Scale`系4オプション）。`clap`のshortオプションは1文字までという制約があるため、CLIの見た目はPowerShell版と一部異なります。正確なオプション名は下記の早見表を参照してください。
 
+## ビルド済みバイナリ
+
+タグ付きリリース時に、[GitHub Actions](https://github.com/tokudiro/voicevox-read-aloud/actions/workflows/release.yml)がWindows(x64)・macOS(x64/arm64)・Linux(x64/arm64)向けバイナリを自動ビルドします。[Releasesページ](https://github.com/tokudiro/voicevox-read-aloud/releases)から入手できます。作者が手元で動作確認しているのはWindows x64のみで、それ以外はCIでビルドが通ることのみ確認済みです（実機での動作は未検証）。うまく動かない場合は[Issue](https://github.com/tokudiro/voicevox-read-aloud/issues)で教えてください。
+
 ## 事前準備
 
 - [Rust](https://www.rust-lang.org/tools/install)（stableツールチェーン）
