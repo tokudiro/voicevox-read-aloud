@@ -26,9 +26,12 @@ read-aloud.bat -ls
 read-aloud.bat path\to\draft.md -l 10:30
 read-aloud.bat path\to\draft.md -l 10
 
-:: Prefetch the next chunk's synthesis while the current one plays
-:: (off by default; noticeably shorter waits when it matters)
+:: Treat the file as plain text, skipping Markdown parsing
 read-aloud.bat path\to\draft.md -p
+
+:: Adjust intonation / pitch / speed / volume (VOICEVOX's *Scale fields)
+read-aloud.bat path\to\draft.md -is 1.3
+read-aloud.bat path\to\draft.md -ps 0.05 -ss 1.2 -vs 1.1
 
 :: Full option list
 read-aloud.bat --help
@@ -49,11 +52,17 @@ Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read-aloud.ps1
 |---|---|---|
 | `-s <ID>` | `-Speaker` | Speaker ID (default: 3 = Zundamon, Normal) |
 | `-l <n[:m]>` | `-Lines` | Line range (`-l 10` = line 10 only, `-l 10:30` = lines 10-30) |
-| `-p` | `-Prefetch` | Prefetch the next chunk's synthesis (off by default; ~20% faster in practice) |
+| `-p` | `-PlainText` | Treat input as plain text, skipping Markdown parsing |
 | `-ls` | `-ListSpeakers` | List installed speakers and exit |
 | `-o <path>` | `-Output` | Don't play back — write audio to a file instead (requires ffmpeg) |
+| `-is <value>` | `-IntonationScale` | Intonation (`intonationScale`). Default: engine default (unset unless passed). Typical range 0.0-2.0 |
+| `-ps <value>` | `-PitchScale` | Pitch (`pitchScale`). Default: engine default (unset unless passed). Typical range -0.15-0.15 |
+| `-ss <value>` | `-SpeedScale` | Speed (`speedScale`). Default: engine default (unset unless passed). Typical range 0.5-2.0 |
+| `-vs <value>` | `-VolumeScale` | Volume (`volumeScale`). Default: engine default (unset unless passed). Typical range 0.0-2.0 |
 | `-h` / `--help` | `-Help` | Show help |
 | `-u <url>` | `-EngineUrl` | VOICEVOX engine URL (default: `http://localhost:50021`) |
+
+The four `*Scale` options are passed straight through to VOICEVOX's `audio_query` response before synthesis, with no range validation on this tool's side (VOICEVOX doesn't validate them either). When not passed, the engine's own default for that field is left untouched.
 
 ## How it's built
 

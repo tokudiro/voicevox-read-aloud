@@ -11,6 +11,18 @@
     [Alias("o")]
     [string]$Output,
 
+    [Alias("is")]
+    [double]$IntonationScale,
+
+    [Alias("ps")]
+    [double]$PitchScale,
+
+    [Alias("ss")]
+    [double]$SpeedScale,
+
+    [Alias("vs")]
+    [double]$VolumeScale,
+
     [Alias("h")]
     [switch]$Help,
 
@@ -34,11 +46,15 @@ begin {
         Write-Host "パイプラインでチャンク文字列を1件ずつ受け取り、VOICEVOXで音声合成して再生します。"
         Write-Host ""
         Write-Host "オプション:"
-        Write-Host "  -s,  -Speaker <ID>     話者ID（既定: 3 = ずんだもん ノーマル）"
-        Write-Host "  -u,  -EngineUrl <url>  VOICEVOXエンジンのURL（既定: http://localhost:50021）"
-        Write-Host "  -ls, -ListSpeakers     インストール済みの話者一覧を表示して終了"
-        Write-Host "  -o,  -Output <path>    再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg）"
-        Write-Host "  -h,  --help            このヘルプを表示"
+        Write-Host "  -s,  -Speaker <ID>          話者ID（既定: 3 = ずんだもん ノーマル）"
+        Write-Host "  -u,  -EngineUrl <url>       VOICEVOXエンジンのURL（既定: http://localhost:50021）"
+        Write-Host "  -ls, -ListSpeakers          インストール済みの話者一覧を表示して終了"
+        Write-Host "  -o,  -Output <path>         再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg）"
+        Write-Host "  -is, -IntonationScale <値>  抑揚（既定: エンジン既定値のまま変更しない。目安0.0〜2.0）"
+        Write-Host "  -ps, -PitchScale <値>       音高（既定: エンジン既定値のまま変更しない。目安-0.15〜0.15）"
+        Write-Host "  -ss, -SpeedScale <値>       話速（既定: エンジン既定値のまま変更しない。目安0.5〜2.0）"
+        Write-Host "  -vs, -VolumeScale <値>      音量（既定: エンジン既定値のまま変更しない。目安0.0〜2.0）"
+        Write-Host "  -h,  --help                 このヘルプを表示"
         exit 0
     }
 
@@ -57,6 +73,15 @@ begin {
         exit 1
     }
 
+    # pitchScaleは中立値が0.0であり、真偽判定（if ($PitchScale)）では未指定と区別できない
+    # （他の3つは中立値が1.0なので実害はないが、統一的にContainsKeyで判定する）。
+    # キーはVOICEVOXのJSONフィールド名そのものにしておき、適用側は動的プロパティ代入で済ませる。
+    $scaleOverrides = @{}
+    if ($PSBoundParameters.ContainsKey('IntonationScale')) { $scaleOverrides['intonationScale'] = $IntonationScale }
+    if ($PSBoundParameters.ContainsKey('PitchScale')) { $scaleOverrides['pitchScale'] = $PitchScale }
+    if ($PSBoundParameters.ContainsKey('SpeedScale')) { $scaleOverrides['speedScale'] = $SpeedScale }
+    if ($PSBoundParameters.ContainsKey('VolumeScale')) { $scaleOverrides['volumeScale'] = $VolumeScale }
+
     if ($ListSpeakers) {
         # Invoke-RestMethodはレスポンスのContent-TypeにcharsetがないとUTF-8として
         # 正しく解釈できず文字化けするため、RawContentStreamから生バイトを取得して
@@ -72,12 +97,13 @@ begin {
     }
 
     function Get-VoicevoxWav {
-        param([string]$Text, [int]$Speaker, [string]$EngineUrl)
+        param([string]$Text, [int]$Speaker, [string]$EngineUrl, [hashtable]$ScaleOverrides)
 
         $encoded = [System.Uri]::EscapeDataString($Text)
         # /speakersと同じ理由でRawContentStreamから明示的にUTF-8デコードする
         $queryResp = Invoke-WebRequest -Method Post -Uri "$EngineUrl/audio_query?text=$encoded&speaker=$Speaker"
         $query = [System.Text.Encoding]::UTF8.GetString($queryResp.RawContentStream.ToArray()) | ConvertFrom-Json
+        foreach ($key in $ScaleOverrides.Keys) { $query.$key = $ScaleOverrides[$key] }
         $bodyJson = $query | ConvertTo-Json -Depth 20
 
         $tempWav = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName() + ".wav")
@@ -86,20 +112,21 @@ begin {
     }
 
     function Start-VoicevoxSynthesizeJob {
-        param([System.Management.Automation.Runspaces.Runspace]$Runspace, [string]$Text, [int]$Speaker, [string]$EngineUrl)
+        param([System.Management.Automation.Runspaces.Runspace]$Runspace, [string]$Text, [int]$Speaker, [string]$EngineUrl, [hashtable]$ScaleOverrides)
 
         $ps = [powershell]::Create()
         $ps.Runspace = $Runspace
         [void]$ps.AddScript({
-            param($Text, $Speaker, $EngineUrl)
+            param($Text, $Speaker, $EngineUrl, $ScaleOverrides)
             $encoded = [System.Uri]::EscapeDataString($Text)
             $queryResp = Invoke-WebRequest -Method Post -Uri "$EngineUrl/audio_query?text=$encoded&speaker=$Speaker"
             $query = [System.Text.Encoding]::UTF8.GetString($queryResp.RawContentStream.ToArray()) | ConvertFrom-Json
+            foreach ($key in $ScaleOverrides.Keys) { $query.$key = $ScaleOverrides[$key] }
             $bodyJson = $query | ConvertTo-Json -Depth 20
             $tempWav = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName() + ".wav")
             Invoke-WebRequest -Method Post -Uri "$EngineUrl/synthesis?speaker=$Speaker" -Body $bodyJson -ContentType "application/json" -OutFile $tempWav
             return $tempWav
-        }).AddArgument($Text).AddArgument($Speaker).AddArgument($EngineUrl)
+        }).AddArgument($Text).AddArgument($Speaker).AddArgument($EngineUrl).AddArgument($ScaleOverrides)
         $handle = $ps.BeginInvoke()
         return [PSCustomObject]@{ PS = $ps; Handle = $handle }
     }
@@ -142,7 +169,7 @@ end {
         $wavPaths = New-Object System.Collections.Generic.List[string]
         for ($i = 0; $i -lt $chunks.Count; $i++) {
             Write-Host "[$($i + 1)/$($chunks.Count)] $($chunks[$i])"
-            $wavPaths.Add((Get-VoicevoxWav -Text $chunks[$i] -Speaker $Speaker -EngineUrl $EngineUrl))
+            $wavPaths.Add((Get-VoicevoxWav -Text $chunks[$i] -Speaker $Speaker -EngineUrl $EngineUrl -ScaleOverrides $scaleOverrides))
         }
 
         # ffmpegのconcatデマルチプレクサへ渡すリストファイル。バックスラッシュはエスケープ解釈されるため、
@@ -171,13 +198,13 @@ end {
         $rs = [runspacefactory]::CreateRunspace()
         $rs.Open()
 
-        $nextJob = Start-VoicevoxSynthesizeJob -Runspace $rs -Text $chunks[0] -Speaker $Speaker -EngineUrl $EngineUrl
+        $nextJob = Start-VoicevoxSynthesizeJob -Runspace $rs -Text $chunks[0] -Speaker $Speaker -EngineUrl $EngineUrl -ScaleOverrides $scaleOverrides
         for ($i = 0; $i -lt $chunks.Count; $i++) {
             Write-Host "[$($i + 1)/$($chunks.Count)] $($chunks[$i])"
             $wavPath = Wait-VoicevoxSynthesizeJob -Job $nextJob
 
             if ($i + 1 -lt $chunks.Count) {
-                $nextJob = Start-VoicevoxSynthesizeJob -Runspace $rs -Text $chunks[$i + 1] -Speaker $Speaker -EngineUrl $EngineUrl
+                $nextJob = Start-VoicevoxSynthesizeJob -Runspace $rs -Text $chunks[$i + 1] -Speaker $Speaker -EngineUrl $EngineUrl -ScaleOverrides $scaleOverrides
             }
 
             $player = New-Object System.Media.SoundPlayer $wavPath

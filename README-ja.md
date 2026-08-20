@@ -28,8 +28,12 @@ read-aloud.bat -ls
 read-aloud.bat path\to\draft.md -l 10:30
 read-aloud.bat path\to\draft.md -l 10
 
-:: 次のチャンクの音声合成を先読みして待ち時間を短縮（体感で気になったときだけ）
+:: Markdown記法を解釈せず、テキストをそのまま読み上げ
 read-aloud.bat path\to\draft.md -p
+
+:: 抑揚・音高・話速・音量を調整（VOICEVOXの各*Scaleフィールドに対応）
+read-aloud.bat path\to\draft.md -is 1.3
+read-aloud.bat path\to\draft.md -ps 0.05 -ss 1.2 -vs 1.1
 
 :: オプション一覧
 read-aloud.bat --help
@@ -50,11 +54,17 @@ Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read-aloud.ps1
 |---|---|---|
 | `-s <ID>` | `-Speaker` | 話者ID（既定: 3 = ずんだもん ノーマル） |
 | `-l <n[:m]>` | `-Lines` | 行番号指定（`-l 10` は10行目のみ、`-l 10:30` は10〜30行目） |
-| `-p` | `-Prefetch` | 次チャンクの音声合成を先読み（既定オフ、実測で体感2割程度短縮） |
+| `-p` | `-PlainText` | Markdown記法を解釈せず、テキストをそのまま扱う |
 | `-ls` | `-ListSpeakers` | 話者一覧を表示して終了 |
 | `-o <path>` | `-Output` | 再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg） |
+| `-is <値>` | `-IntonationScale` | 抑揚（`intonationScale`）。既定: エンジン既定値のまま（未指定時は変更しない）。目安0.0〜2.0 |
+| `-ps <値>` | `-PitchScale` | 音高（`pitchScale`）。既定: エンジン既定値のまま（未指定時は変更しない）。目安-0.15〜0.15 |
+| `-ss <値>` | `-SpeedScale` | 話速（`speedScale`）。既定: エンジン既定値のまま（未指定時は変更しない）。目安0.5〜2.0 |
+| `-vs <値>` | `-VolumeScale` | 音量（`volumeScale`）。既定: エンジン既定値のまま（未指定時は変更しない）。目安0.0〜2.0 |
 | `-h` / `--help` | `-Help` | ヘルプを表示して終了 |
 | `-u <url>` | `-EngineUrl` | VOICEVOXエンジンのURL（既定: `http://localhost:50021`） |
+
+`*Scale`系の4オプションは、`audio_query`のレスポンスに対してそのまま値を上書きしたうえで合成に渡しており、本ツール側での値の範囲チェックは行いません（VOICEVOX側もチェックしません）。未指定の場合は、そのフィールドのエンジン既定値がそのまま使われます。
 
 ## 構成
 

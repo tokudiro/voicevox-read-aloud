@@ -24,6 +24,18 @@
     [Alias("o")]
     [string]$Output,
 
+    [Alias("is")]
+    [double]$IntonationScale,
+
+    [Alias("ps")]
+    [double]$PitchScale,
+
+    [Alias("ss")]
+    [double]$SpeedScale,
+
+    [Alias("vs")]
+    [double]$VolumeScale,
+
     [Parameter(ValueFromPipeline=$true)]
     [string]$PipelineLine,
 
@@ -54,9 +66,13 @@ begin {
         Write-Host "  -l,  -Lines <n[:m]>    行番号を指定（-l 10 は10行目のみ、-l 10:20 は10〜20行目）"
         Write-Host "  -u,  -EngineUrl <url>  VOICEVOXエンジンのURL（既定: http://localhost:50021）"
         Write-Host "  -ls, -ListSpeakers     インストール済みの話者一覧を表示して終了"
-        Write-Host "  -p,  -PlainText        Markdown記法を解釈せず、テキストをそのまま読み上げ"
-        Write-Host "  -o,  -Output <path>    再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg）"
-        Write-Host "  -h,  --help            このヘルプを表示"
+        Write-Host "  -p,  -PlainText             Markdown記法を解釈せず、テキストをそのまま読み上げ"
+        Write-Host "  -o,  -Output <path>         再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg）"
+        Write-Host "  -is, -IntonationScale <値>  抑揚（既定: エンジン既定値のまま変更しない。目安0.0〜2.0）"
+        Write-Host "  -ps, -PitchScale <値>       音高（既定: エンジン既定値のまま変更しない。目安-0.15〜0.15）"
+        Write-Host "  -ss, -SpeedScale <値>       話速（既定: エンジン既定値のまま変更しない。目安0.5〜2.0）"
+        Write-Host "  -vs, -VolumeScale <値>      音量（既定: エンジン既定値のまま変更しない。目安0.0〜2.0）"
+        Write-Host "  -h,  --help                 このヘルプを表示"
         Write-Host ""
         Write-Host "内部的には次の2つのコマンドをパイプでつないでいます。単体でも使えます。"
         Write-Host "  ConvertTo-SpeechChunks.ps1   テキスト → 読み上げ用チャンクへの分割"
@@ -97,6 +113,10 @@ end {
         EngineUrl = $EngineUrl
     }
     if ($Output) { $speakParams['Output'] = $Output }
+    if ($PSBoundParameters.ContainsKey('IntonationScale')) { $speakParams['IntonationScale'] = $IntonationScale }
+    if ($PSBoundParameters.ContainsKey('PitchScale')) { $speakParams['PitchScale'] = $PitchScale }
+    if ($PSBoundParameters.ContainsKey('SpeedScale')) { $speakParams['SpeedScale'] = $SpeedScale }
+    if ($PSBoundParameters.ContainsKey('VolumeScale')) { $speakParams['VolumeScale'] = $VolumeScale }
 
     if ($pipedLines.Count -gt 0) {
         # PowerShell内の実パイプライン経由（例: Get-Content file | read-aloud.ps1）。
