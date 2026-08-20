@@ -11,6 +11,9 @@
     [Alias("lc")]
     [switch]$License,
 
+    [Alias("i")]
+    [int]$Id,
+
     [Alias("o")]
     [string]$Output,
 
@@ -51,8 +54,9 @@ begin {
         Write-Host "オプション:"
         Write-Host "  -s,  -Speaker <ID>          話者ID（既定: 3 = ずんだもん ノーマル）"
         Write-Host "  -u,  -EngineUrl <url>       VOICEVOXエンジンのURL（既定: http://localhost:50021）"
-        Write-Host "  -ls, -ListSpeakers          インストール済みの話者一覧を表示して終了"
-        Write-Host "  -lc, -License               インストール済みの話者ごとの利用規約を表示して終了"
+        Write-Host "  -ls, -ListSpeakers          インストール済みの話者一覧を表示して終了（-i併用でID絞り込み）"
+        Write-Host "  -lc, -License               インストール済みの話者ごとの利用規約を表示して終了（-i併用でID絞り込み）"
+        Write-Host "  -i,  -Id <話者ID>           -ls/-lcと併用し、指定IDの話者だけに絞り込む"
         Write-Host "  -o,  -Output <path>         再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg）"
         Write-Host "  -is, -IntonationScale <値>  抑揚（既定: エンジン既定値のまま変更しない。目安0.0〜2.0）"
         Write-Host "  -ps, -PitchScale <値>       音高（既定: エンジン既定値のまま変更しない。目安-0.15〜0.15）"
@@ -92,10 +96,17 @@ begin {
         # 明示的にUTF-8でデコードする。
         $resp = Invoke-WebRequest -Uri "$EngineUrl/speakers" -Method Get
         $speakers = [System.Text.Encoding]::UTF8.GetString($resp.RawContentStream.ToArray()) | ConvertFrom-Json
+        $hasIdFilter = $PSBoundParameters.ContainsKey('Id')
+        $found = $false
         foreach ($sp in $speakers) {
             foreach ($style in $sp.styles) {
+                if ($hasIdFilter -and $style.id -ne $Id) { continue }
                 Write-Host ("{0,4}  {1} - {2}" -f $style.id, $sp.name, $style.name)
+                $found = $true
             }
+        }
+        if ($hasIdFilter -and -not $found) {
+            Write-Host "話者ID $Id は見つかりませんでした。"
         }
         exit 0
     }
@@ -105,6 +116,17 @@ begin {
         # ループは不要（スタイル違いは同じ話者の利用規約を共有する）。
         $resp = Invoke-WebRequest -Uri "$EngineUrl/speakers" -Method Get
         $speakers = [System.Text.Encoding]::UTF8.GetString($resp.RawContentStream.ToArray()) | ConvertFrom-Json
+        if ($PSBoundParameters.ContainsKey('Id')) {
+            # 利用規約はキャラクター単位のため、指定IDを持つスタイルからキャラクターを逆引きする。
+            # Where-Objectの結果が1件だけだとスカラーに展開され.Countが$nullになる罠を避けるため、
+            # パイプライン結果ではなく配列プロパティに対する-containsで判定する。
+            $target = $speakers | Where-Object { $_.styles.id -contains $Id } | Select-Object -First 1
+            if (-not $target) {
+                Write-Host "話者ID $Id は見つかりませんでした。"
+                exit 0
+            }
+            $speakers = @($target)
+        }
         foreach ($sp in $speakers) {
             $infoResp = Invoke-WebRequest -Uri "$EngineUrl/speaker_info?speaker_uuid=$($sp.speaker_uuid)" -Method Get
             $info = [System.Text.Encoding]::UTF8.GetString($infoResp.RawContentStream.ToArray()) | ConvertFrom-Json

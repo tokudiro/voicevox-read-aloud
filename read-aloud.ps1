@@ -68,8 +68,8 @@ begin {
         Write-Host "  -s,  -Speaker <ID>     話者ID（既定: 3 = ずんだもん ノーマル）"
         Write-Host "  -l,  -Lines <n[:m]>    行番号を指定（-l 10 は10行目のみ、-l 10:20 は10〜20行目）"
         Write-Host "  -u,  -EngineUrl <url>  VOICEVOXエンジンのURL（既定: http://localhost:50021）"
-        Write-Host "  -ls, -ListSpeakers          インストール済みの話者一覧を表示して終了"
-        Write-Host "  -lc, -License               インストール済みの話者ごとの利用規約を表示して終了"
+        Write-Host "  -ls, -ListSpeakers [ID]     インストール済みの話者一覧を表示して終了（ID指定でその話者だけに絞り込み）"
+        Write-Host "  -lc, -License [ID]          インストール済みの話者ごとの利用規約を表示して終了（ID指定でその話者だけに絞り込み）"
         Write-Host "  -p,  -PlainText             Markdown記法を解釈せず、テキストをそのまま読み上げ"
         Write-Host "  -o,  -Output <path>         再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg）"
         Write-Host "  -is, -IntonationScale <値>  抑揚（既定: エンジン既定値のまま変更しない。目安0.0〜2.0）"
@@ -84,13 +84,28 @@ begin {
         exit 0
     }
 
+    if ($ListSpeakers -or $License) {
+        # "-ls 3"/"-lc 3"のように直後へ数字だけを置いた場合、-ls/-lcはswitchなので
+        # その数字はどの名前付きパラメータにも束縛されず、Position=0の$File（"--help"が
+        # 束縛されるのと同じ経路）か、それも埋まっていれば$Restに落ちてくる。
+        $idArg = $null
+        if ($File) { $idArg = $File } elseif ($Rest.Count -gt 0) { $idArg = $Rest[0] }
+        $idParams = @{}
+        if ($idArg) {
+            $parsedId = 0
+            if ([int]::TryParse($idArg, [ref]$parsedId)) {
+                $idParams['Id'] = $parsedId
+            }
+        }
+    }
+
     if ($ListSpeakers) {
-        & "$PSScriptRoot\Invoke-VoicevoxSpeak.ps1" -ListSpeakers -EngineUrl $EngineUrl
+        & "$PSScriptRoot\Invoke-VoicevoxSpeak.ps1" -ListSpeakers -EngineUrl $EngineUrl @idParams
         exit $LASTEXITCODE
     }
 
     if ($License) {
-        & "$PSScriptRoot\Invoke-VoicevoxSpeak.ps1" -License -EngineUrl $EngineUrl
+        & "$PSScriptRoot\Invoke-VoicevoxSpeak.ps1" -License -EngineUrl $EngineUrl @idParams
         exit $LASTEXITCODE
     }
 
