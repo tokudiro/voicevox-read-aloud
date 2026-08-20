@@ -6,6 +6,9 @@
     [Alias("l")]
     [string]$Lines,
 
+    [Alias("cl")]
+    [int]$ChunkLength,
+
     [Alias("p")]
     [switch]$PlainText,
 
@@ -38,12 +41,18 @@ begin {
         Write-Host ""
         Write-Host "オプション:"
         Write-Host "  -l,  -Lines <n[:m]>    行番号を指定（-l 10 は10行目のみ、-l 10:20 は10〜20行目、-l 10: は10行目以降、-l :20 は20行目まで）"
+        Write-Host "  -cl, -ChunkLength <n>  n文字を超えるチャンクをさらに分割（読点→空白→強制カットの順）"
         Write-Host "  -p,  -PlainText        Markdown記法を解釈せず、テキストをそのまま扱う"
         Write-Host "  -h,  --help            このヘルプを表示"
         exit 0
     }
 
     $pipedLines = New-Object System.Collections.Generic.List[string]
+
+    if ($PSBoundParameters.ContainsKey('ChunkLength') -and $ChunkLength -le 0) {
+        Write-Host "「-cl」には1以上の整数を指定してください: $ChunkLength"
+        exit 1
+    }
 
     $StartLine = 1
     $EndLine = 0
@@ -104,6 +113,54 @@ begin {
             ForEach-Object { $_.Value.Trim() } |
             Where-Object { $_ -ne '' }
     }
+
+    function Split-LongChunk {
+        param([string]$Text, [int]$MaxLength)
+
+        # 句点分割"後"のチャンクのうちMaxLengthを超えるものだけを対象に、上限に近い位置から
+        # 手前方向へ 読点（、）→ 半角/全角スペース → 強制カット の順で分割点を探す。
+        $pieces = New-Object System.Collections.Generic.List[string]
+        $remaining = $Text
+
+        while ($remaining.Length -gt $MaxLength) {
+            $window = $remaining.Substring(0, $MaxLength)
+
+            $commaIdx = $window.LastIndexOf('、')
+            if ($commaIdx -ge 0) {
+                $pieces.Add($remaining.Substring(0, $commaIdx + 1))
+                $remaining = $remaining.Substring($commaIdx + 1)
+                continue
+            }
+
+            $spaceIdx = -1
+            for ($i = $window.Length - 1; $i -ge 0; $i--) {
+                if ($window[$i] -eq ' ' -or $window[$i] -eq [char]0x3000) {
+                    $spaceIdx = $i
+                    break
+                }
+            }
+            if ($spaceIdx -ge 0) {
+                $piece = $remaining.Substring(0, $spaceIdx).TrimEnd()
+                if ($piece -ne '') { $pieces.Add($piece) }
+                $remaining = $remaining.Substring($spaceIdx + 1)
+                continue
+            }
+
+            # 読点・空白のどちらも見つからない場合はMaxLength文字目で強制的に切るが、
+            # サロゲートペア（絵文字等）の境界には切り込まないようにする。
+            $cutLength = $MaxLength
+            if ([char]::IsHighSurrogate($remaining[$cutLength - 1])) {
+                $cutLength -= 1
+            }
+            if ($cutLength -le 0) { $cutLength = $MaxLength }
+            $pieces.Add($remaining.Substring(0, $cutLength))
+            $remaining = $remaining.Substring($cutLength)
+        }
+
+        if ($remaining -ne '') { $pieces.Add($remaining) }
+
+        return $pieces
+    }
 }
 
 process {
@@ -153,5 +210,12 @@ end {
     # まとめて受けて後から添字アクセスすると、1件しかない場合にPowerShellが配列を
     # 文字列へ展開してしまい "text"[0] が1文字だけを返す事故につながる（過去に実際に発生）。
     # 1件ずつストリームすれば、受け手は常にスカラー1件＝1チャンクとして扱えて安全。
-    Split-IntoChunks -Text $textToSpeak
+    $hasChunkLength = $PSBoundParameters.ContainsKey('ChunkLength')
+    foreach ($chunk in (Split-IntoChunks -Text $textToSpeak)) {
+        if ($hasChunkLength -and $chunk.Length -gt $ChunkLength) {
+            Split-LongChunk -Text $chunk -MaxLength $ChunkLength
+        } else {
+            $chunk
+        }
+    }
 }
