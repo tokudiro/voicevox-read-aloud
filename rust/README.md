@@ -6,7 +6,7 @@ A cross-platform Rust port of the [PowerShell version](../README.md) of `voicevo
 
 ## Status
 
-This is an early, minimal port. It currently covers only the core pipeline: read a file (or stdin) → strip Markdown → split into sentence chunks → synthesize each chunk via VOICEVOX → play it back. The PowerShell version's other options (`-Lines`, `-PlainText`, `-Output`, `-ListSpeakers`, `-License`, ID filtering, the `*Scale` options) aren't ported yet — see the repo's [issues](https://github.com/tokudiro/voicevox-read-aloud/issues) for what's tracked.
+All options from the PowerShell version are now ported: line ranges, plain-text mode, file export, speaker/license listing with ID filtering, and the four `*Scale` options. The CLI surface differs slightly from the PowerShell version because `clap` short flags are limited to a single character — see the options table below for the exact names.
 
 ## Prerequisites
 
@@ -32,6 +32,28 @@ cargo run --release -- path/to/draft.md
 read-aloud path/to/draft.md
 read-aloud path/to/draft.md --speaker 8
 read-aloud path/to/draft.md --engine-url http://localhost:50021
+
+# Read only a line range (1-based, inclusive)
+read-aloud path/to/draft.md -l 10:30
+read-aloud path/to/draft.md -l 10
+read-aloud path/to/draft.md -l 10:
+read-aloud path/to/draft.md -l :30
+
+# Treat the file as plain text, skipping Markdown parsing
+read-aloud path/to/draft.md -p
+
+# List installed speakers / show each speaker's license, optionally filtered by ID
+read-aloud --list-speakers
+read-aloud --list-speakers -i 3
+read-aloud --license -i 3
+
+# Adjust intonation / pitch / speed / volume (VOICEVOX's *Scale fields)
+read-aloud path/to/draft.md --intonation-scale 1.3
+read-aloud path/to/draft.md --pitch-scale 0.05 --speed-scale 1.2 --volume-scale 1.1
+
+# Export to an audio file instead of playing it back (requires ffmpeg)
+read-aloud path/to/draft.md -o out.mp3
+
 read-aloud --help
 ```
 
@@ -47,8 +69,20 @@ cat path/to/draft.md | read-aloud
 |---|---|---|
 | — | `[FILE]` | File to read (omit to read from stdin) |
 | `-s` | `--speaker` | Speaker ID (default: 3 = Zundamon, Normal) |
+| `-l <n[:m]>` | `--lines` | Line range (`-l 10` = line 10 only, `-l 10:30` = lines 10-30, `-l 10:` = line 10 to end, `-l :30` = start to line 30) |
+| `-p` | `--plain-text` | Treat input as plain text, skipping Markdown parsing |
+| — | `--list-speakers` (alias `--ls`) | List installed speakers and exit. Combine with `-i` to show only one |
+| — | `--license` (alias `--lc`) | Show each installed speaker's usage terms/license and exit. Combine with `-i` to show only one |
+| `-i <ID>` | `--id` | Used with `--list-speakers`/`--license` to filter to a single speaker ID |
+| `-o <path>` | `--output` | Don't play back — write audio to a file instead (requires ffmpeg) |
+| — | `--intonation-scale` (alias `--is`) | Intonation (`intonationScale`). Default: engine default (unset unless passed) |
+| — | `--pitch-scale` (alias `--ps`) | Pitch (`pitchScale`). Default: engine default (unset unless passed) |
+| — | `--speed-scale` (alias `--ss`) | Speed (`speedScale`). Default: engine default (unset unless passed) |
+| — | `--volume-scale` (alias `--vs`) | Volume (`volumeScale`). Default: engine default (unset unless passed) |
 | `-u` | `--engine-url` | VOICEVOX engine URL (default: `http://localhost:50021`) |
 | `-h` | `--help` | Show help |
+
+Unlike the PowerShell version's `-is`/`-ps`/`-ss`/`-vs`/`-ls`/`-lc`, these aliases need a double dash (`--is`, not `-is`) because `clap` short flags are limited to one character.
 
 ## License
 

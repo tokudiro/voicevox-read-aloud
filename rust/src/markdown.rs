@@ -67,3 +67,47 @@ pub fn split_into_chunks(text: &str) -> Vec<String> {
         .filter(|s| !s.is_empty())
         .collect()
 }
+
+/// PowerShell版の `-l <n[:m]>` と同じ4形式（n / n:m / n: / :m）を解析する。
+/// 戻り値は(開始行, 終了行)で、終了行0は「末尾まで」を表す。
+pub fn parse_line_range(s: &str) -> Result<(usize, usize), String> {
+    let invalid = || format!("「-l」の形式が不正です: {} （例: -l 10 または -l 10:20）", s);
+    match s.find(':') {
+        Some(idx) => {
+            let (a, b) = (&s[..idx], &s[idx + 1..]);
+            if a.is_empty() && b.is_empty() {
+                return Err(invalid());
+            }
+            let start = if a.is_empty() {
+                1
+            } else {
+                a.parse::<usize>().map_err(|_| invalid())?
+            };
+            let end = if b.is_empty() {
+                0
+            } else {
+                b.parse::<usize>().map_err(|_| invalid())?
+            };
+            Ok((start, end))
+        }
+        None => {
+            let n = s.parse::<usize>().map_err(|_| invalid())?;
+            Ok((n, n))
+        }
+    }
+}
+
+/// 指定行範囲（1始まり・両端含む。endが0なら末尾まで）だけを取り出す。
+/// `raw`はエラーメッセージ表示用の元の`-l`引数文字列。
+pub fn apply_line_range(text: &str, start: usize, end: usize, raw: &str) -> Result<String, String> {
+    let normalized = text.replace("\r\n", "\n");
+    let all_lines: Vec<&str> = normalized.split('\n').collect();
+    let last_idx = all_lines.len();
+    let end_idx = if end > 0 { end.min(last_idx) } else { last_idx };
+    let start_idx = start.max(1);
+    if start_idx <= end_idx {
+        Ok(all_lines[(start_idx - 1)..end_idx].join("\n"))
+    } else {
+        Err(format!("指定範囲（-l {}）が対象のテキスト範囲外です。", raw))
+    }
+}

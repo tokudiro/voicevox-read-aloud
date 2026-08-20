@@ -6,7 +6,7 @@ English README is available at [README.md](README.md).
 
 ## 現状
 
-まだ最小限の移植です。現時点では基本パイプライン（ファイル/標準入力の取得 → Markdown除去 → 文単位のチャンク分割 → VOICEVOXでの音声合成 → 再生）のみをカバーしています。PowerShell版にある`-Lines`・`-PlainText`・`-Output`・`-ListSpeakers`・`-License`・IDによる絞り込み・各`*Scale`オプションはまだ未移植です。進捗は[Issues](https://github.com/tokudiro/voicevox-read-aloud/issues)を参照してください。
+PowerShell版のオプションは全て移植済みです（行範囲指定、プレーンテキストモード、ファイル書き出し、話者一覧・利用規約のID絞り込み、`*Scale`系4オプション）。`clap`のshortオプションは1文字までという制約があるため、CLIの見た目はPowerShell版と一部異なります。正確なオプション名は下記の早見表を参照してください。
 
 ## 事前準備
 
@@ -32,6 +32,28 @@ cargo run --release -- path/to/draft.md
 read-aloud path/to/draft.md
 read-aloud path/to/draft.md --speaker 8
 read-aloud path/to/draft.md --engine-url http://localhost:50021
+
+# 行番号を指定して一部だけ読ませる（1始まり・両端含む）
+read-aloud path/to/draft.md -l 10:30
+read-aloud path/to/draft.md -l 10
+read-aloud path/to/draft.md -l 10:
+read-aloud path/to/draft.md -l :30
+
+# Markdown記法を解釈せず、テキストをそのまま読み上げ
+read-aloud path/to/draft.md -p
+
+# 話者一覧・利用規約を表示（-i でID絞り込み）
+read-aloud --list-speakers
+read-aloud --list-speakers -i 3
+read-aloud --license -i 3
+
+# 抑揚・音高・話速・音量を調整（VOICEVOXの各*Scaleフィールドに対応）
+read-aloud path/to/draft.md --intonation-scale 1.3
+read-aloud path/to/draft.md --pitch-scale 0.05 --speed-scale 1.2 --volume-scale 1.1
+
+# 再生せず、音声ファイルとして書き出す（要ffmpeg）
+read-aloud path/to/draft.md -o out.mp3
+
 read-aloud --help
 ```
 
@@ -47,8 +69,20 @@ cat path/to/draft.md | read-aloud
 |---|---|---|
 | — | `[FILE]` | 読み上げるファイル（省略時は標準入力から読み込み） |
 | `-s` | `--speaker` | 話者ID（既定: 3 = ずんだもん ノーマル） |
+| `-l <n[:m]>` | `--lines` | 行番号指定（`-l 10` は10行目のみ、`-l 10:30` は10〜30行目、`-l 10:` は10行目以降、`-l :30` は30行目まで） |
+| `-p` | `--plain-text` | Markdown記法を解釈せず、テキストをそのまま扱う |
+| — | `--list-speakers`（エイリアス`--ls`） | 話者一覧を表示して終了。`-i`併用でその話者だけに絞り込み |
+| — | `--license`（エイリアス`--lc`） | 話者ごとの利用規約を表示して終了。`-i`併用でその話者だけに絞り込み |
+| `-i <ID>` | `--id` | `--list-speakers`/`--license`と併用し、指定IDの話者だけに絞り込む |
+| `-o <path>` | `--output` | 再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg） |
+| — | `--intonation-scale`（エイリアス`--is`） | 抑揚（`intonationScale`）。既定: エンジン既定値のまま（未指定時は変更しない） |
+| — | `--pitch-scale`（エイリアス`--ps`） | 音高（`pitchScale`）。既定: エンジン既定値のまま（未指定時は変更しない） |
+| — | `--speed-scale`（エイリアス`--ss`） | 話速（`speedScale`）。既定: エンジン既定値のまま（未指定時は変更しない） |
+| — | `--volume-scale`（エイリアス`--vs`） | 音量（`volumeScale`）。既定: エンジン既定値のまま（未指定時は変更しない） |
 | `-u` | `--engine-url` | VOICEVOXエンジンのURL（既定: `http://localhost:50021`） |
 | `-h` | `--help` | ヘルプを表示 |
+
+PowerShell版の`-is`/`-ps`/`-ss`/`-vs`/`-ls`/`-lc`と異なり、これらのエイリアスは`--is`のようにダブルダッシュが必要です（`clap`のshortオプションは1文字までのため）。
 
 ## ライセンス
 
