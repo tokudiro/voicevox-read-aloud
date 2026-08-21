@@ -12,6 +12,9 @@
     [Alias("p")]
     [switch]$PlainText,
 
+    [Alias("rp")]
+    [string]$Replace,
+
     [Alias("h")]
     [switch]$Help,
 
@@ -43,6 +46,7 @@ begin {
         Write-Host "  -l,  -Lines <n[:m]>    行番号を指定（-l 10 は10行目のみ、-l 10:20 は10〜20行目、-l 10: は10行目以降、-l :20 は20行目まで）"
         Write-Host "  -cl, -ChunkLength <n>  n文字を超えるチャンクをさらに分割（読点→空白→強制カットの順）"
         Write-Host "  -p,  -PlainText        Markdown記法を解釈せず、テキストをそのまま扱う"
+        Write-Host "  -rp, -Replace <file>   この原稿限りの一時的な読み・言い回し調整を行う置換ファイル（1行1組、検索語=置換後）"
         Write-Host "  -h,  --help            このヘルプを表示"
         exit 0
     }
@@ -101,6 +105,52 @@ begin {
             $out.Add($l)
         }
         return ($out -join "`n")
+    }
+
+    function Get-ReplacementRules {
+        param([string]$Path)
+
+        if (-not (Test-Path $Path)) {
+            Write-Error "置換ファイルが見つかりません: $Path"
+            exit 1
+        }
+        $content = Get-Content -Path $Path -Raw -Encoding UTF8
+
+        $rules = New-Object System.Collections.Generic.List[string[]]
+        $lineNo = 0
+        foreach ($rawLine in ($content -split "`r?`n")) {
+            $lineNo++
+            $line = $rawLine.Trim()
+            if ($line -eq '' -or $line.StartsWith('#')) { continue }
+
+            $parts = $line -split '=', 2
+            if ($parts.Count -lt 2) {
+                Write-Error "置換ファイルの${lineNo}行目が不正です（'='が見つかりません）: $rawLine"
+                exit 1
+            }
+            $target = $parts[0].Trim()
+            if ($target -eq '') {
+                Write-Error "置換ファイルの${lineNo}行目が不正です（検索語が空です）: $rawLine"
+                exit 1
+            }
+            $rules.Add(@($target, $parts[1].Trim()))
+        }
+
+        # 単項カンマでリストをラップしないと、パイプライン境界でListが1段階アンロールされ、
+        # ルールが1件だけの場合に呼び出し側で string[] へ展開されてしまう
+        # （$rule[0]/$rule[1]が「配列の要素」ではなく「文字列の1文字目/2文字目」になる事故）。
+        return ,$rules
+    }
+
+    function Invoke-Replacements {
+        param([string]$Text, $Rules)
+
+        # 正規表現は使わない（この原稿限りの一時的な調整用であり、単語境界の厳密な判定は
+        # VOICEVOXの読み方＆アクセント辞書に任せる想定のため）。
+        foreach ($rule in $Rules) {
+            $Text = $Text.Replace($rule[0], $rule[1])
+        }
+        return $Text
     }
 
     function Split-IntoChunks {
@@ -205,6 +255,11 @@ end {
     }
 
     $textToSpeak = if ($PlainText) { $rawText } else { Convert-MarkdownToPlainText -Text $rawText }
+
+    if ($Replace) {
+        $rules = Get-ReplacementRules -Path $Replace
+        $textToSpeak = Invoke-Replacements -Text $textToSpeak -Rules $rules
+    }
 
     # チャンクは1件ずつパイプラインへ流す。$chunks = Split-IntoChunks... のように変数へ
     # まとめて受けて後から添字アクセスすると、1件しかない場合にPowerShellが配列を

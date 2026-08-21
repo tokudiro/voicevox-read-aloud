@@ -43,6 +43,9 @@ read-aloud.bat path\to\draft.md -cl 40
 :: Treat the file as plain text, skipping Markdown parsing
 read-aloud.bat path\to\draft.md -p
 
+:: One-off wording/reading tweaks scoped to this draft (rules file: one "target=replacement" per line)
+read-aloud.bat path\to\draft.md -rp rules.txt
+
 :: Adjust intonation / pitch / speed / volume (VOICEVOX's *Scale fields)
 read-aloud.bat path\to\draft.md -is 1.3
 read-aloud.bat path\to\draft.md -ps 0.05 -ss 1.2 -vs 1.1
@@ -68,6 +71,7 @@ Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read-aloud.ps1
 | `-l <n[:m]>` | `-Lines` | Line range (`-l 10` = line 10 only, `-l 10:30` = lines 10-30, `-l 10:` = line 10 to end, `-l :30` = start to line 30) |
 | `-cl <n>` | `-ChunkLength` | Further split chunks longer than n characters (tries a comma `、`, then whitespace, then a hard cut at n characters, in that order). Default: no extra splitting unless passed |
 | `-p` | `-PlainText` | Treat input as plain text, skipping Markdown parsing |
+| `-rp <file>` | `-Replace` | Rules file for one-off reading/wording tweaks scoped to this draft. See "Fixing mispronunciations" below |
 | `-ls [ID]` | `-ListSpeakers` | List installed speakers and exit. With `ID`, show only that one |
 | `-lc [ID]` | `-License` | Show each installed speaker's usage terms/license and exit. With `ID`, show only that speaker's |
 | `-o <path>` | `-Output` | Don't play back — write audio to a file instead (requires ffmpeg) |
@@ -79,6 +83,22 @@ Get-Content draft.md -Encoding UTF8 -TotalCount 30 | .\read-aloud.ps1
 | `-u <url>` | `-EngineUrl` | VOICEVOX engine URL (default: `http://localhost:50021`) |
 
 The four `*Scale` options are passed straight through to VOICEVOX's `audio_query` response before synthesis, with no range validation on this tool's side (VOICEVOX doesn't validate them either). When not passed, the engine's own default for that field is left untouched.
+
+## Fixing mispronunciations
+
+There are two ways to fix a mispronunciation, depending on how often it comes up.
+
+- **Recurring words** (proper nouns, technical terms — anything you'll hit again in future drafts): register them in the VOICEVOX app under Settings → "読み方＆アクセント辞書" (reading & accent dictionary). You can set both the reading and the pitch accent there, and it's persisted on the engine side — this tool needs no changes and every future draft benefits automatically.
+- **One-off tweaks scoped to a single draft**: use `-Replace <file>`. This is for wording you wouldn't bother registering in the VOICEVOX dictionary, or a reading that only makes sense in this particular draft's context.
+
+The rules file has one `target=replacement` pair per line. Lines starting with `#` are comments; blank lines are ignored.
+
+```
+# rules.txt
+VOICEVOX=Voicevox
+```
+
+Rules are applied as plain string substitution (no regex), in file order, to the whole plain-text draft after Markdown stripping and before chunking. There's no word-boundary matching, so pick target strings carefully to avoid replacing an unintended substring.
 
 ## How it's built
 

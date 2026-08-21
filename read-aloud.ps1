@@ -27,6 +27,9 @@
     [Alias("p")]
     [switch]$PlainText,
 
+    [Alias("rp")]
+    [string]$Replace,
+
     [Alias("o")]
     [string]$Output,
 
@@ -75,6 +78,7 @@ begin {
         Write-Host "  -ls, -ListSpeakers [ID]     インストール済みの話者一覧を表示して終了（ID指定でその話者だけに絞り込み）"
         Write-Host "  -lc, -License [ID]          インストール済みの話者ごとの利用規約を表示して終了（ID指定でその話者だけに絞り込み）"
         Write-Host "  -p,  -PlainText             Markdown記法を解釈せず、テキストをそのまま読み上げ"
+        Write-Host "  -rp, -Replace <file>        この原稿限りの一時的な読み・言い回し調整を行う置換ファイル（1行1組、検索語=置換後）"
         Write-Host "  -o,  -Output <path>         再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg）"
         Write-Host "  -is, -IntonationScale <値>  抑揚（既定: エンジン既定値のまま変更しない。目安0.0〜2.0）"
         Write-Host "  -ps, -PitchScale <値>       音高（既定: エンジン既定値のまま変更しない。目安-0.15〜0.15）"
@@ -136,6 +140,7 @@ end {
     if ($Lines) { $chunkParams['Lines'] = $Lines }
     if ($PSBoundParameters.ContainsKey('ChunkLength')) { $chunkParams['ChunkLength'] = $ChunkLength }
     if ($PlainText) { $chunkParams['PlainText'] = $true }
+    if ($Replace) { $chunkParams['Replace'] = $Replace }
 
     $speakParams = @{
         Speaker   = $Speaker
