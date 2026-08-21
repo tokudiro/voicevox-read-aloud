@@ -49,6 +49,9 @@ read-aloud path/to/draft.md --chunk-length 40
 # Treat the file as plain text, skipping Markdown parsing
 read-aloud path/to/draft.md -p
 
+# Check the chunking result only, without calling VOICEVOX
+read-aloud path/to/draft.md --dump-chunks
+
 # List installed speakers / show each speaker's license, optionally filtered by ID
 read-aloud --list-speakers
 read-aloud --list-speakers -i 3
@@ -79,6 +82,7 @@ cat path/to/draft.md | read-aloud
 | `-l <n[:m]>` | `--lines` | Line range (`-l 10` = line 10 only, `-l 10:30` = lines 10-30, `-l 10:` = line 10 to end, `-l :30` = start to line 30) |
 | — | `--chunk-length <n>` (alias `--cl`) | Further split chunks longer than n characters (tries a comma `、`, then whitespace, then a hard cut at n characters, in that order). Default: no extra splitting unless passed |
 | `-p` | `--plain-text` | Treat input as plain text, skipping Markdown parsing |
+| — | `--dump-chunks` (alias `--dc`) | Skip VOICEVOX entirely and write the chunking result to stdout, one chunk per line, then exit |
 | — | `--list-speakers` (alias `--ls`) | List installed speakers and exit. Combine with `-i` to show only one |
 | — | `--license` (alias `--lc`) | Show each installed speaker's usage terms/license and exit. Combine with `-i` to show only one |
 | `-i <ID>` | `--id` | Used with `--list-speakers`/`--license` to filter to a single speaker ID |

@@ -35,6 +35,10 @@ struct Args {
     #[arg(short = 'p', long = "plain-text")]
     plain_text: bool,
 
+    /// VOICEVOXを呼び出さず、チャンク分割結果のみを1行ずつ標準出力へ書き出して終了する
+    #[arg(long = "dump-chunks", alias = "dc")]
+    dump_chunks: bool,
+
     /// 話者一覧を表示して終了（--idで絞り込み）
     #[arg(long = "list-speakers", alias = "ls")]
     list_speakers: bool,
@@ -87,6 +91,21 @@ fn main() -> ExitCode {
         None => None,
     };
 
+    if args.dump_chunks {
+        let chunks = match build_chunks(&args, chunk_length) {
+            Ok(c) => c,
+            Err(code) => return code,
+        };
+        if chunks.is_empty() {
+            eprintln!("読み上げるテキストがありません。");
+            return ExitCode::FAILURE;
+        }
+        for chunk in &chunks {
+            println!("{}", chunk);
+        }
+        return ExitCode::SUCCESS;
+    }
+
     let client = VoicevoxClient::new(args.engine_url.clone());
     if let Err(e) = client.check_connection() {
         eprintln!("{}", e);
@@ -108,19 +127,42 @@ fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
 
+    let chunks = match build_chunks(&args, chunk_length) {
+        Ok(c) => c,
+        Err(code) => return code,
+    };
+
+    if chunks.is_empty() {
+        eprintln!("読み上げるテキストがありません。");
+        return ExitCode::FAILURE;
+    }
+
+    println!("読み上げます: {} 区切り、話者ID: {}", chunks.len(), args.speaker);
+    println!("中断する場合は Ctrl+C を押してください。\n");
+
+    if let Some(output) = &args.output {
+        run_output(&client, &chunks, args.speaker, &scales, output)
+    } else {
+        run_playback(&client, &chunks, args.speaker, &scales)
+    }
+}
+
+/// ファイル/標準入力の読み込みから行範囲指定・Markdown除去・チャンク分割までを行う。
+/// VOICEVOXを呼ばずに完結するため、--dump-chunksと通常の読み上げ経路の両方から使う。
+fn build_chunks(args: &Args, chunk_length: Option<usize>) -> Result<Vec<String>, ExitCode> {
     let raw_text = match &args.file {
         Some(path) => match fs::read_to_string(path) {
             Ok(text) => text,
             Err(e) => {
                 eprintln!("ファイルが読み込めません: {} ({})", path, e);
-                return ExitCode::FAILURE;
+                return Err(ExitCode::FAILURE);
             }
         },
         None => {
             let mut buf = String::new();
             if let Err(e) = io::stdin().read_to_string(&mut buf) {
                 eprintln!("標準入力の読み込みに失敗しました: {}", e);
-                return ExitCode::FAILURE;
+                return Err(ExitCode::FAILURE);
             }
             buf
         }
@@ -132,14 +174,14 @@ fn main() -> ExitCode {
                 Ok(v) => v,
                 Err(e) => {
                     eprintln!("{}", e);
-                    return ExitCode::FAILURE;
+                    return Err(ExitCode::FAILURE);
                 }
             };
             match markdown::apply_line_range(&raw_text, start, end, lines) {
                 Ok(t) => t,
                 Err(e) => {
                     eprintln!("{}", e);
-                    return ExitCode::FAILURE;
+                    return Err(ExitCode::FAILURE);
                 }
             }
         }
@@ -166,19 +208,7 @@ fn main() -> ExitCode {
         None => chunks,
     };
 
-    if chunks.is_empty() {
-        eprintln!("読み上げるテキストがありません。");
-        return ExitCode::FAILURE;
-    }
-
-    println!("読み上げます: {} 区切り、話者ID: {}", chunks.len(), args.speaker);
-    println!("中断する場合は Ctrl+C を押してください。\n");
-
-    if let Some(output) = &args.output {
-        run_output(&client, &chunks, args.speaker, &scales, output)
-    } else {
-        run_playback(&client, &chunks, args.speaker, &scales)
-    }
+    Ok(chunks)
 }
 
 fn run_list_speakers(client: &VoicevoxClient, id: Option<u32>) -> ExitCode {
