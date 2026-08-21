@@ -87,10 +87,10 @@ cat path/to/draft.md | read-aloud
 | — | `--license` (alias `--lc`) | Show each installed speaker's usage terms/license and exit. Combine with `-i` to show only one |
 | `-i <ID>` | `--id` | Used with `--list-speakers`/`--license` to filter to a single speaker ID |
 | `-o <path>` | `--output` | Don't play back — write audio to a file instead (requires ffmpeg) |
-| — | `--intonation-scale` (alias `--is`) | Intonation (`intonationScale`). Default: engine default (unset unless passed) |
-| — | `--pitch-scale` (alias `--ps`) | Pitch (`pitchScale`). Default: engine default (unset unless passed) |
-| — | `--speed-scale` (alias `--ss`) | Speed (`speedScale`). Default: engine default (unset unless passed) |
-| — | `--volume-scale` (alias `--vs`) | Volume (`volumeScale`). Default: engine default (unset unless passed) |
+| — | `--intonation-scale` (alias `--is`) | Intonation (`intonationScale`). Default: engine default (unset unless passed). Typical range 0.0-2.0 |
+| — | `--pitch-scale` (alias `--ps`) | Pitch (`pitchScale`). Default: engine default (unset unless passed). Typical range -0.15-0.15 |
+| — | `--speed-scale` (alias `--ss`) | Speed (`speedScale`). Default: engine default (unset unless passed). Typical range 0.5-2.0 |
+| — | `--volume-scale` (alias `--vs`) | Volume (`volumeScale`). Default: engine default (unset unless passed). Typical range 0.0-2.0 |
 | `-u` | `--engine-url` | VOICEVOX engine URL (default: `http://localhost:50021`) |
 | `-h` | `--help` | Show help |
 

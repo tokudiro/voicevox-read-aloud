@@ -87,10 +87,10 @@ cat path/to/draft.md | read-aloud
 | — | `--license`（エイリアス`--lc`） | 話者ごとの利用規約を表示して終了。`-i`併用でその話者だけに絞り込み |
 | `-i <ID>` | `--id` | `--list-speakers`/`--license`と併用し、指定IDの話者だけに絞り込む |
 | `-o <path>` | `--output` | 再生せず、音声ファイル（.mp3等）として書き出す（要ffmpeg） |
-| — | `--intonation-scale`（エイリアス`--is`） | 抑揚（`intonationScale`）。既定: エンジン既定値のまま（未指定時は変更しない） |
-| — | `--pitch-scale`（エイリアス`--ps`） | 音高（`pitchScale`）。既定: エンジン既定値のまま（未指定時は変更しない） |
-| — | `--speed-scale`（エイリアス`--ss`） | 話速（`speedScale`）。既定: エンジン既定値のまま（未指定時は変更しない） |
-| — | `--volume-scale`（エイリアス`--vs`） | 音量（`volumeScale`）。既定: エンジン既定値のまま（未指定時は変更しない） |
+| — | `--intonation-scale`（エイリアス`--is`） | 抑揚（`intonationScale`）。既定: エンジン既定値のまま（未指定時は変更しない）。目安0.0〜2.0 |
+| — | `--pitch-scale`（エイリアス`--ps`） | 音高（`pitchScale`）。既定: エンジン既定値のまま（未指定時は変更しない）。目安-0.15〜0.15 |
+| — | `--speed-scale`（エイリアス`--ss`） | 話速（`speedScale`）。既定: エンジン既定値のまま（未指定時は変更しない）。目安0.5〜2.0 |
+| — | `--volume-scale`（エイリアス`--vs`） | 音量（`volumeScale`）。既定: エンジン既定値のまま（未指定時は変更しない）。目安0.0〜2.0 |
 | `-u` | `--engine-url` | VOICEVOXエンジンのURL（既定: `http://localhost:50021`） |
 | `-h` | `--help` | ヘルプを表示 |
 

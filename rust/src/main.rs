@@ -55,19 +55,19 @@ struct Args {
     #[arg(short = 'o', long = "output")]
     output: Option<String>,
 
-    /// 抑揚（intonationScale）。未指定時はエンジン既定値のまま
+    /// 抑揚（intonationScale）。未指定時はエンジン既定値のまま。目安0.0〜2.0
     #[arg(long = "intonation-scale", alias = "is")]
     intonation_scale: Option<f64>,
 
-    /// 音高（pitchScale）。未指定時はエンジン既定値のまま
+    /// 音高（pitchScale）。未指定時はエンジン既定値のまま。目安-0.15〜0.15
     #[arg(long = "pitch-scale", alias = "ps")]
     pitch_scale: Option<f64>,
 
-    /// 話速（speedScale）。未指定時はエンジン既定値のまま
+    /// 話速（speedScale）。未指定時はエンジン既定値のまま。目安0.5〜2.0
     #[arg(long = "speed-scale", alias = "ss")]
     speed_scale: Option<f64>,
 
-    /// 音量（volumeScale）。未指定時はエンジン既定値のまま
+    /// 音量（volumeScale）。未指定時はエンジン既定値のまま。目安0.0〜2.0
     #[arg(long = "volume-scale", alias = "vs")]
     volume_scale: Option<f64>,
 }
