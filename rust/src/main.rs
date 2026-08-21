@@ -1,4 +1,5 @@
 mod markdown;
+mod replace;
 mod voicevox;
 
 use clap::Parser;
@@ -38,6 +39,10 @@ struct Args {
     /// VOICEVOXを呼び出さず、チャンク分割結果のみを1行ずつ標準出力へ書き出して終了する
     #[arg(long = "dump-chunks", alias = "dc")]
     dump_chunks: bool,
+
+    /// この原稿限りの一時的な読み・言い回し調整を行う置換ファイル（1行1組、検索語=置換後）
+    #[arg(long = "replace", alias = "rp")]
+    replace: Option<String>,
 
     /// 話者一覧を表示して終了（--idで絞り込み）
     #[arg(long = "list-speakers", alias = "ls")]
@@ -193,6 +198,21 @@ fn build_chunks(args: &Args, chunk_length: Option<usize>) -> Result<Vec<String>,
     } else {
         markdown::strip_markdown(&raw_text)
     };
+
+    let plain_text = match &args.replace {
+        Some(path) => {
+            let rules = match replace::load_replacements(path) {
+                Ok(r) => r,
+                Err(e) => {
+                    eprintln!("{}", e);
+                    return Err(ExitCode::FAILURE);
+                }
+            };
+            replace::apply_replacements(&plain_text, &rules)
+        }
+        None => plain_text,
+    };
+
     let chunks = markdown::split_into_chunks(&plain_text);
     let chunks: Vec<String> = match chunk_length {
         Some(n) => chunks

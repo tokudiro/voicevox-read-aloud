@@ -52,6 +52,9 @@ read-aloud path/to/draft.md -p
 # Check the chunking result only, without calling VOICEVOX
 read-aloud path/to/draft.md --dump-chunks
 
+# One-off wording/reading tweaks scoped to this draft (rules file: one "target=replacement" per line)
+read-aloud path/to/draft.md --replace rules.txt
+
 # List installed speakers / show each speaker's license, optionally filtered by ID
 read-aloud --list-speakers
 read-aloud --list-speakers -i 3
@@ -83,6 +86,7 @@ cat path/to/draft.md | read-aloud
 | — | `--chunk-length <n>` (alias `--cl`) | Further split chunks longer than n characters (tries a comma `、`, then whitespace, then a hard cut at n characters, in that order). Default: no extra splitting unless passed |
 | `-p` | `--plain-text` | Treat input as plain text, skipping Markdown parsing |
 | — | `--dump-chunks` (alias `--dc`) | Skip VOICEVOX entirely and write the chunking result to stdout, one chunk per line, then exit |
+| — | `--replace <file>` (alias `--rp`) | Rules file for one-off reading/wording tweaks scoped to this draft. See "Fixing mispronunciations" below |
 | — | `--list-speakers` (alias `--ls`) | List installed speakers and exit. Combine with `-i` to show only one |
 | — | `--license` (alias `--lc`) | Show each installed speaker's usage terms/license and exit. Combine with `-i` to show only one |
 | `-i <ID>` | `--id` | Used with `--list-speakers`/`--license` to filter to a single speaker ID |
@@ -95,6 +99,22 @@ cat path/to/draft.md | read-aloud
 | `-h` | `--help` | Show help |
 
 Unlike the PowerShell version's `-is`/`-ps`/`-ss`/`-vs`/`-ls`/`-lc`, these aliases need a double dash (`--is`, not `-is`) because `clap` short flags are limited to one character. For negative `--chunk-length` values, use `--chunk-length=-5` instead of `--chunk-length -5` — otherwise `clap` mistakes `-5` for a separate flag.
+
+## Fixing mispronunciations
+
+There are two ways to fix a mispronunciation, depending on how often it comes up.
+
+- **Recurring words** (proper nouns, technical terms — anything you'll hit again in future drafts): register them in the VOICEVOX app under Settings → "読み方＆アクセント辞書" (reading & accent dictionary). You can set both the reading and the pitch accent there, and it's persisted on the engine side — `read-aloud` needs no changes and every future draft benefits automatically.
+- **One-off tweaks scoped to a single draft**: use `--replace <file>`. This is for wording you wouldn't bother registering in the VOICEVOX dictionary, or a reading that only makes sense in this particular draft's context.
+
+The rules file has one `target=replacement` pair per line. Lines starting with `#` are comments; blank lines are ignored.
+
+```
+# rules.txt
+VOICEVOX=Voicevox
+```
+
+Rules are applied as plain string substitution (no regex), in file order, to the whole plain-text draft after Markdown stripping and before chunking. There's no word-boundary matching, so pick target strings carefully to avoid replacing an unintended substring.
 
 ## License
 
